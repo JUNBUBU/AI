@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>智星启蒙 - AI写诗送给妈妈</title>
+  <style>
+    body { font-family: "PingFang SC", sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background:#fff9f0; }
+    .step { display: none; }
+    .active { display: block; }
+    button { margin: 10px 5px; padding: 12px 24px; font-size: 16px; background:#ff6b6b; color:white; border:none; border-radius:8px; cursor:pointer; }
+    select, input[type=text] { width: 100%; padding: 10px; margin: 8px 0; border:1px solid #ccc; border-radius:6px; }
+    #poem-output { white-space: pre-line; background:#fff; padding:15px; border-radius:8px; margin:15px 0; font-size:18px; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <div id="step1" class="step active">
+    <h2>✨ 你想用AI写一首诗送给妈妈吗？</h2>
+    <p>5分钟完成，还能学会“怎么跟AI说话”！</p>
+    <button onclick="showStep(2)">开始创作</button>
+  </div>
+
+  <div id="step2" class="step">
+    <p>你觉得哪首诗更可能是AI写的？</p>
+    <p><strong>诗A：</strong>妈妈的手像春风...</p>
+    <p><strong>诗B：</strong>妈妈的爱如大海深...</p>
+    <button onclick="showStep(3)">A</button>
+    <button onclick="showStep(3)">B</button>
+  </div>
+
+  <div id="step3" class="step">
+    <label>角色：<select id="role">
+      <option>小诗人</option>
+      <option>童话作家</option>
+      <option>古典诗词大师</option>
+    </select></label>
+    <label>任务：<input type="text" id="task" value="写一首4行诗，主题是妈妈的爱"></label>
+    <label><input type="checkbox" id="req1"> 用“阳光”“拥抱”“微笑”</label>
+    <label><input type="checkbox" id="req2"> 不要出现“累”“辛苦”</label>
+    <label>风格：
+      <select id="style">
+        <option>可爱</option>
+        <option>抒情</option>
+        <option>古风</option>
+      </select>
+    </label>
+    <button onclick="generatePoem()">生成我的诗！</button>
+  </div>
+
+  <div id="step4" class="step">
+    <h3>你的AI诗：</h3>
+    <div id="poem-output"></div>
+    <button onclick="showStep(5)">完成！进入反思</button>
+  </div>
+
+  <div id="step5" class="step">
+    <p>这首诗里，最有心意的部分来自哪里？</p>
+    <button onclick="finish('AI写的句子')">AI写的句子</button>
+    <button onclick="finish('我告诉AI的想法')">我告诉AI的想法</button>
+    <button onclick="finish('我自己修改的地方')">我自己修改的地方</button>
+  </div>
+
+  <script>
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      document.getElementById(`step${n}`).classList.add('active');
+    }
+    async function generatePoem() {
+      const role = document.getElementById('role').value;
+      const task = document.getElementById('task').value;
+      const reqs = [];
+      if (document.getElementById('req1').checked) reqs.push('阳光');
+      if (document.getElementById('req2').checked) reqs.push('不要辛苦');
+      reqs.push(document.getElementById('style').value);
+      const res = await fetch('/api/generate-poem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, task, requirements: reqs })
+      });
+      const data = await res.json();
+      if (data.error) return alert('❌ ' + data.error);
+      document.getElementById('poem-output').innerText = data.poem;
+      showStep(4);
+    }
+    function finish(answer) {
+      alert(`🎉 完成！\n反思答案：${answer}`);
+    }
+  </script>
+</body>
+</html>
